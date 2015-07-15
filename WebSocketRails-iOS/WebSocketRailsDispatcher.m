@@ -38,28 +38,25 @@
 
 - (void)newMessage:(NSArray *)data
 {
-    for (id socket_message in data)
+    WebSocketRailsEvent *event = [WebSocketRailsEvent.alloc initWithData:data];
+    
+    if ([event isResult])
     {
-        WebSocketRailsEvent *event = [WebSocketRailsEvent.alloc initWithData:socket_message];
-        
-        if ([event isResult])
+        if (_queue[event.id])
         {
-            if (_queue[event.id])
-            {
-                [_queue[event.id] runCallbacks:event.success eventData:event.data];
-                [_queue removeObjectForKey:event.id];
-            }
-        } else if ([event isChannel]) {
-            [self dispatchChannel:event];
-        } else if ([event isPing]) {
-            [self pong];
-        } else {
-            [self dispatch:event];
+            [_queue[event.id] runCallbacks:event.success eventData:event.data];
+            [_queue removeObjectForKey:event.id];
         }
-        
-        if ([_state isEqualToString:@"connecting"] && [event.name isEqualToString:@"client_connected"])
-            [self connectionEstablished:event.data];
+    } else if ([event isChannel]) {
+        [self dispatchChannel:event];
+    } else if ([event isPing]) {
+        [self pong];
+    } else {
+        [self dispatch:event];
     }
+    
+    if ([_state isEqualToString:@"connecting"] && [event.name isEqualToString:@"client_connected"])
+        [self connectionEstablished:event.data];
 }
 
 - (void)connectionEstablished:(id)data
@@ -67,7 +64,7 @@
     _state = @"connected";
     _connectionId = data[@"connection_id"] ? data[@"connection_id"] : [NSNull null];
     [_connection flushQueue:data[@"connection_id"]];
-    WebSocketRailsEvent *connectionEstablishedEvent = [WebSocketRailsEvent.alloc initWithData:@[@"connection_opened", @{}, _connectionId]];
+    WebSocketRailsEvent *connectionEstablishedEvent = [WebSocketRailsEvent.alloc initWithData:@[@"connection_opened", @{@"connection_id": _connectionId}, @{}]];
     [self dispatch:connectionEstablishedEvent];
     _pingPongTimer = [NSTimer timerWithTimeInterval:12 target:self selector:@selector(handlePingPongFailure) userInfo:nil repeats:NO];
 }
@@ -82,7 +79,7 @@
 
 - (void)trigger:(NSString *)eventName data:(id)data success:(EventCompletionBlock)success failure:(EventCompletionBlock)failure
 {
-    WebSocketRailsEvent *event = [WebSocketRailsEvent.alloc initWithData:@[eventName, data, _connectionId] success:success failure:failure];
+    WebSocketRailsEvent *event = [WebSocketRailsEvent.alloc initWithData:@[eventName, @{@"connection_id": _connectionId}, data] success:success failure:failure];
     _queue[event.id] = event;
     [_connection trigger:event];
 }
@@ -138,8 +135,12 @@
 {
     [_pingPongTimer invalidate];
     _pingPongTimer = [NSTimer timerWithTimeInterval:12 target:self selector:@selector(handlePingPongFailure) userInfo:nil repeats:NO];
-    
-    WebSocketRailsEvent *pong = [WebSocketRailsEvent.alloc initWithData:@[@"websocket_rails.pong", @{}, _connectionId ? _connectionId : [NSNull null]]];
+    WebSocketRailsEvent *pong;
+    if (_connectionId) {
+       pong = [WebSocketRailsEvent.alloc initWithData:@[@"websocket_rails.pong", @{@"connection_id": _connectionId}, @{}]];
+    }else{
+       pong = [WebSocketRailsEvent.alloc initWithData:@[@"websocket_rails.pong", @{}]];
+    }
     [_connection trigger:pong];
 }
 

@@ -22,7 +22,13 @@
     self = [super init];
     if (self) {
         _name = data[0];
-        _attr = data[1];
+        if ([data count] > 2) {
+            _attr = data[2];
+            _connectionId = data[1][@"connection_id"];
+        }else{
+            _attr = data[1];
+            _connectionId = @(0);
+        }
         
         if (_attr)
         {
@@ -34,21 +40,22 @@
             if (_attr[@"channel"] && _attr[@"channel"] != [NSNull null])
                 _channel = _attr[@"channel"];
             
-            if (_attr[@"data"] && _attr[@"data"] != [NSNull null])
-                _data = _attr[@"data"];
+            if (_attr[@"result"] && _attr[@"result"] != [NSNull null])
+                _data = _attr[@"result"];
             
             if (_attr[@"token"] && _attr[@"token"] != [NSNull null])
                 _token = _attr[@"token"];
-            
-            if ([data count] > 2 && data[2] && data[2] != [NSNull null])
-                _connectionId = data[2];
-            else
-                _connectionId = @0;
-            
+           
             if (_attr[@"success"] && _attr[@"success"] != [NSNull null])
             {
                 _result = YES;
                 _success = (BOOL) _attr[@"success"];
+            }
+            if (_attr[@"server_token"] && _attr[@"server_token"] != [NSNull null]) {
+                _serverToken = _attr[@"server_token"];
+            }
+            if (_attr[@"user_id"] && _attr[@"user_id"] != [NSNull null]) {
+                _userId = _attr[@"user_id"];
             }
         }
         

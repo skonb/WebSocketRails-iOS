@@ -70,7 +70,7 @@
 
 - (IBAction)connect:(id)sender {
     _dispatcher = [WebSocketRailsDispatcher.alloc initWithUrl:[NSURL URLWithString:@"ws://127.0.0.1:3000/websocket"]];
-    [_dispatcher bind:@"connection_opened" callback:^(id data) {
+    [_dispatcher bind:@"client_connected" callback:^(id data) {
         NSLog(@"Yay! Connected!");
     }];
     [_dispatcher connect];

@@ -20,6 +20,8 @@
 @property (nonatomic, strong) NSNumber *connectionId;
 @property (nonatomic, assign) BOOL success;
 @property (nonatomic, assign) BOOL result;
+@property (nonatomic, strong) NSString *serverToken;
+@property (nonatomic, strong) NSString *userId;
 
 - (id)initWithData:(id)data;
 - (id)initWithData:(id)data success:(EventCompletionBlock)success failure:(EventCompletionBlock)failure;
