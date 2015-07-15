@@ -17,5 +17,5 @@ Pod::Spec.new do |s|
   s.source_files       = "WebSocketRails-iOS/*.{h,m}"
   s.library            = "icucore"
   s.requires_arc       = true
-  s.dependency           "SocketRocket", "~> 0.3.1-beta2"
+  s.dependency           "SocketRocket", "~> 0.4"
 end
